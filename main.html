@@ -1,43 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Speech Synthesis</title>
-  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speech Synthesis App</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #00c9a7;
+    }
+
+    .container {
+      width: 500px;
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      text-align: center;
+      background: gold;
+      margin: 0;
+      padding: 20px;
+      font-size: 40px;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    select,
+    textarea,
+    input[type="range"] {
+      width: 100%;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      height: 150px;
+      resize: none;
+      font-size: 20px;
+      padding: 10px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 15px;
+      font-size: 24px;
+      background: gold;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    label {
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="voiceinator">
+  <div class="container">
+    <h1>The Voiceinator 5000</h1>
 
-      <h1>The Voiceinator 5000</h1>
+    <div class="content">
+      
+      <!-- Voice Dropdown -->
+      <label for="voices">Select Voice:</label>
+      <select id="voices"></select>
 
-      <select name="voice" id="voices">
-        <option value="">Select A Voice</option>
-      </select>
-
+      <!-- Rate Slider -->
       <label for="rate">Rate:</label>
-      <input name="rate" type="range" min="0" max="3" value="1" step="0.1">
+      <input 
+        type="range" 
+        id="rate" 
+        min="0.5" 
+        max="2" 
+        step="0.1" 
+        value="1"
+      />
 
+      <!-- Pitch Slider -->
       <label for="pitch">Pitch:</label>
+      <input 
+        type="range" 
+        id="pitch" 
+        min="0" 
+        max="2" 
+        step="0.1" 
+        value="1"
+      />
 
-      <input name="pitch" type="range" min="0" max="2" step="0.1">
-      <textarea name="text">Hello! I love JavaScript 👍</textarea>
-      <button id="stop">Stop!</button>
-      <button id="speak">Speak</button>
+      <!-- Text Area -->
+      <label for="text">Enter Text:</label>
+      <textarea id="text">Hello! I love JavaScript 👍</textarea>
+
+      <!-- Buttons -->
+      <div class="buttons">
+        <button id="stop">Stop!</button>
+        <button id="speak">Speak</button>
+      </div>
 
     </div>
+  </div>
 
-<script>
-  const msg = new SpeechSynthesisUtterance();
-  let voices = [];
-  const voicesDropdown = document.querySelector('[name="voice"]');
-  const options = document.querySelectorAll('[type="range"], [name="text"]');
-  const speakButton = document.querySelector('#speak');
-  const stopButton = document.querySelector('#stop');
+  <script>
+    // DOM Elements
+    const voiceSelect = document.getElementById("voices");
+    const rate = document.getElementById("rate");
+    const pitch = document.getElementById("pitch");
+    const text = document.getElementById("text");
+    const speakBtn = document.getElementById("speak");
+    const stopBtn = document.getElementById("stop");
 
-  //Your code goes here
-</script>
+    // Speech Object
+    let voices = [];
+    let speech = new SpeechSynthesisUtterance();
+
+    // Load Voices
+    function loadVoices() {
+      voices = window.speechSynthesis.getVoices();
+
+      if (voices.length === 0) {
+        voiceSelect.innerHTML = `<option>No voices available</option>`;
+        return;
+      }
+
+      voiceSelect.innerHTML = voices
+        .map((voice, index) => {
+          return `<option value="${index}">${voice.name} (${voice.lang})</option>`;
+        })
+        .join("");
+    }
+
+    // Voice loading event
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+
+    // Initial call
+    loadVoices();
+
+    // Speak Function
+    function speakText() {
+      if (text.value.trim() === "") {
+        alert("Please enter some text!");
+        return;
+      }
+
+      // Stop previous speech
+      window.speechSynthesis.cancel();
+
+      speech.text = text.value;
+      speech.voice = voices[voiceSelect.value];
+      speech.rate = parseFloat(rate.value);
+      speech.pitch = parseFloat(pitch.value);
+
+      window.speechSynthesis.speak(speech);
+    }
+
+    // Stop Function
+    function stopText() {
+      window.speechSynthesis.cancel();
+    }
+
+    // Button Events
+    speakBtn.addEventListener("click", speakText);
+    stopBtn.addEventListener("click", stopText);
+
+    // Change voice mid-speech
+    voiceSelect.addEventListener("change", () => {
+      if (window.speechSynthesis.speaking) {
+        speakText();
+      }
+    });
+
+    // Dynamic Rate Update
+    rate.addEventListener("input", () => {
+      if (window.speechSynthesis.speaking) {
+        speakText();
+      }
+    });
+
+    // Dynamic Pitch Update
+    pitch.addEventListener("input", () => {
+      if (window.speechSynthesis.speaking) {
+        speakText();
+      }
+    });
+  </script>
 
 </body>
 </html>
